@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file,Response
 import matplotlib.pyplot as plt
 from io import BytesIO
 
@@ -9,7 +9,8 @@ def home():
     if request.method == 'POST':
         sequences = []
         sequences = request.form['sequences'].splitlines()
-        image_data = generate_sequence_logo(sequences)
+        format='jpg'
+        image_data = generate_sequence_logo(sequences,format)
         pas(sequences)
         return render_template('index.html', image_data=image_data,sequences=sequences)
     return render_template('index.html')
@@ -17,7 +18,7 @@ def pas(sequences):
     global seq
     seq = sequences
     return seq
-def generate_sequence_logo(sequences):
+def generate_sequence_logo(sequences,format):
     if not sequences:
         raise ValueError("No sequences provided")
 
@@ -73,7 +74,13 @@ def generate_sequence_logo(sequences):
 
     # Save the figure to a buffer
     buffer = BytesIO()
-    plt.savefig(buffer, format='png')
+    if format == 'svg':
+        plt.savefig(buffer, format='svg')
+    elif format == 'jpg':
+        plt.savefig(buffer, format='jpg')
+    else:
+        plt.savefig(buffer, format='png')
+    
     buffer.seek(0)
 
     plt.savefig('sequence.jpg')
@@ -91,62 +98,18 @@ def download():
     if format == 'svg':
         mimetype = 'image/svg+xml'
         extension = 'svg'
-        image_data = generate_sequence_logo_svg(seq)  # Generate SVG image data
+        image_data = generate_sequence_logo(seq,extension)  # Generate SVG image data
     elif format == 'jpg':
         mimetype = 'image/jpeg'
         extension = 'jpg'
-        image_data = generate_sequence_logo_jpg(seq)  # Generate JPG image data
+        image_data = generate_sequence_logo(seq,extension)  # Generate JPG image data
     else:
         mimetype = 'image/png'
         extension = 'png'
-        image_data = generate_sequence_logo_png(seq)  # Generate PNG image data
+        image_data = generate_sequence_logo(seq,extension)  # Generate PNG image data
 
     return send_file(BytesIO(image_data), attachment_filename='sequence_logo.' + extension, as_attachment=True, mimetype=mimetype)
-
-def generate_sequence_logo_svg(sequences):
-    # Generate the sequence logo using matplotlib
-    fig, ax = generate_sequence_logo(sequences)
-
-    # Save the figure to a buffer as SVG
-    buffer = BytesIO()
-    fig.savefig(buffer, format='svg')
-    buffer.seek(0)
-
-    # Clear the figure to release memory
-    plt.close(fig)
-
-    # Return the SVG image data
-    return buffer.getvalue()
-
-def generate_sequence_logo_jpg(sequences):
-    # Generate the sequence logo using matplotlib
-    fig, ax = generate_sequence_logo(sequences)
-
-    # Save the figure to a buffer as JPG
-    buffer = BytesIO()
-    fig.savefig(buffer, format='jpg')
-    buffer.seek(0)
-
-    # Clear the figure to release memory
-    plt.close(fig)
-
-    # Return the JPG image data
-    return buffer.getvalue()
-
-def generate_sequence_logo_png(sequences):
-    # Generate the sequence logo using matplotlib
-    fig, ax = generate_sequence_logo(sequences)
-
-    # Save the figure to a buffer as PNG
-    buffer = BytesIO()
-    fig.savefig(buffer, format='png')
-    buffer.seek(0)
-
-    # Clear the figure to release memory
-    plt.close(fig)
-
-    # Return the PNG image data
-    return buffer.getvalue()
+    #return send_file(BytesIO(image_data), mimetype=mimetype, as_attachment=True, attachment_filename='sequence_logo.' + extension)
 
 if __name__ == '__main__':
     app.run(debug=True)
