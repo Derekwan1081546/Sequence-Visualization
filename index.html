@@ -10,13 +10,21 @@
     <title>Sequence Logo Visualization</title>
 </head>
 <body>
-    <div>
+<div>
     <h1>Sequence Logo Visualization</h1>
-    <form action="/" method="post">
-        <textarea name="sequences" rows="10" cols="50" placeholder="Enter sequences here"></textarea>
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <textarea name="sequences" rows="5" cols="40" placeholder="Enter the sequences"></textarea>
         <br>
-        <input type="submit" value="Generate Logo">
+        <input type="submit" value="Generate Sequence Logo">
     </form>
-    </div>
+    {% if image_data %}
+        <h2>Sequence Logo</h2>
+        <img src="data:image/png;base64,{{ image_data }}" alt="Sequence Logo">
+        <br>
+        <a href="/download?format=png" download="sequence_logo.png">Download as PNG</a>
+        <a href="/download?format=jpg" download="sequence_logo.jpg">Download as JPG</a>
+        <a href="/download?format=svg" download="sequence_logo.svg">Download as SVG</a>
+    {% endif %}
+</div>
 </body>
 </html>
