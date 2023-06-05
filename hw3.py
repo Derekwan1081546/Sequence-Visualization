@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_file,Response
 import matplotlib.pyplot as plt
 from io import BytesIO
+import base64
 
 app = Flask(__name__)
 seq=[]
@@ -9,7 +10,7 @@ def home():
     if request.method == 'POST':
         sequences = []
         sequences = request.form['sequences'].splitlines()
-        format='jpg'
+        format='png'
         image_data = generate_sequence_logo(sequences,format)
         pas(sequences)
         return render_template('index.html', image_data=image_data,sequences=sequences)
@@ -90,7 +91,9 @@ def generate_sequence_logo(sequences,format):
 
     # Clear the figure to release memory
     plt.close(fig)
-    return buffer.getvalue()
+
+    image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return image_data
 
 @app.route('/download', methods=['GET'])
 def download():
@@ -98,18 +101,25 @@ def download():
     if format == 'svg':
         mimetype = 'image/svg+xml'
         extension = 'svg'
+        attachment_filename='sequence_logo.' + extension
         image_data = generate_sequence_logo(seq,extension)  # Generate SVG image data
+        image_data = base64.b64decode(image_data)
     elif format == 'jpg':
         mimetype = 'image/jpeg'
         extension = 'jpg'
+        attachment_filename='sequence_logo.' + extension
         image_data = generate_sequence_logo(seq,extension)  # Generate JPG image data
+        image_data = base64.b64decode(image_data)
     else:
         mimetype = 'image/png'
         extension = 'png'
+        attachment_filename='sequence_logo.' + extension
         image_data = generate_sequence_logo(seq,extension)  # Generate PNG image data
+        image_data = base64.b64decode(image_data)
 
-    return send_file(BytesIO(image_data), attachment_filename='sequence_logo.' + extension, as_attachment=True, mimetype=mimetype)
-    #return send_file(BytesIO(image_data), mimetype=mimetype, as_attachment=True, attachment_filename='sequence_logo.' + extension)
+    #return send_file(attachment_filename, as_attachment=True)
+    #return send_file(BytesIO(image_data), attachment_filename='sequence_logo.' + extension, as_attachment=True, mimetype=mimetype)
+    return send_file(BytesIO(image_data), mimetype=mimetype, as_attachment=True, download_name='sequence_logo.' + extension)
 
 if __name__ == '__main__':
     app.run(debug=True)
